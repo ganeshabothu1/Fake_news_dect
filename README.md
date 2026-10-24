@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 📰 Fake News Detection System
 
 A Machine Learning based web application that detects whether a given news article is **Fake News or True News**.
@@ -61,3 +62,6 @@ Fake_new_dect/
 ├── index.html
 ├── style.css
 └── README.md
+=======
+# Fake_news_dect
+>>>>>>> 76313fbf79b45d3ad4b687761cafdf0eed75748b
