@@ -358,6 +358,41 @@
 
                 </div>
 
+                                <!-- Prediction Probability Graph -->
+                <div id="predictionGraph" style="margin-top: 25px;">
+
+                    <h4>Prediction Probability</h4>
+
+                    <!-- Fake News - Red -->
+                    <div style="margin-bottom: 18px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                            <strong style="color: #e53935;">FAKE NEWS</strong>
+                            <strong id="fakeProbabilityValue">0%</strong>
+                        </div>
+
+                        <div style="height: 24px; background: #eee; border-radius: 8px; overflow: hidden;">
+                            <div id="fakeProbabilityBar"
+                                 style="height: 100%; width: 0%; background: #e53935; transition: width 1s;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- True News - Green -->
+                    <div style="margin-bottom: 18px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                            <strong style="color: #2e7d32;">TRUE NEWS</strong>
+                            <strong id="trueProbabilityValue">0%</strong>
+                        </div>
+
+                        <div style="height: 24px; background: #eee; border-radius: 8px; overflow: hidden;">
+                            <div id="trueProbabilityBar"
+                                 style="height: 100%; width: 0%; background: #2e7d32; transition: width 1s;">
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
                 <div class="result-note">
                     <span>ⓘ</span>
                     This prediction represents the classification made by
@@ -753,7 +788,40 @@
     const confidenceValue = document.getElementById("confidenceValue");
     const confidenceBar = document.getElementById("confidenceBar");
 
+    // Prediction graph elements
+const predictionGraph = document.getElementById("predictionGraph");
+const fakeProbabilityValue = document.getElementById("fakeProbabilityValue");
+const trueProbabilityValue = document.getElementById("trueProbabilityValue");
+const fakeProbabilityBar = document.getElementById("fakeProbabilityBar");
+const trueProbabilityBar = document.getElementById("trueProbabilityBar");
+
     const characterCount = document.getElementById("characterCount");
+
+    /* =========================
+   PREDICTION GRAPH FUNCTION
+========================= */
+
+function showPredictionGraph(data) {
+
+    const fake = Number(data.fake_probability);
+    const truth = Number(data.true_probability);
+
+    if (!Number.isFinite(fake) || !Number.isFinite(truth)) {
+        console.error("Fake/True probabilities are missing.");
+        return;
+    }
+
+    predictionGraph.style.display = "block";
+
+    fakeProbabilityValue.textContent = fake.toFixed(2) + "%";
+    trueProbabilityValue.textContent = truth.toFixed(2) + "%";
+
+    fakeProbabilityBar.style.width =
+        Math.max(0, Math.min(100, fake)) + "%";
+
+    trueProbabilityBar.style.width =
+        Math.max(0, Math.min(100, truth)) + "%";
+}
 
 
     /* =========================
@@ -869,6 +937,7 @@
 
             scanningBox.classList.remove("show");
 
+            showPredictionGraph(data);
 
             /* =========================
                PREDICTION
@@ -948,6 +1017,39 @@
 
             }, 100);
 
+            /* =========================
+   PREDICTION GRAPH
+========================= */
+
+let fakeProbability = Number(data.fake_probability);
+let trueProbability = Number(data.true_probability);
+
+// Backend probabilities ivvakapothe fallback
+if (!Number.isFinite(fakeProbability) ||
+    !Number.isFinite(trueProbability)) {
+
+    fakeProbability = isFake ? confidence : 100 - confidence;
+    trueProbability = 100 - fakeProbability;
+}
+
+fakeProbability = Math.max(0, Math.min(100, fakeProbability));
+trueProbability = Math.max(0, Math.min(100, trueProbability));
+
+predictionGraph.style.display = "block";
+
+fakeProbabilityValue.textContent =
+    fakeProbability.toFixed(2) + "%";
+
+trueProbabilityValue.textContent =
+    trueProbability.toFixed(2) + "%";
+
+fakeProbabilityBar.style.width = "0%";
+trueProbabilityBar.style.width = "0%";
+
+setTimeout(function () {
+    fakeProbabilityBar.style.width = fakeProbability + "%";
+    trueProbabilityBar.style.width = trueProbability + "%";
+}, 100);
 
         } catch (error) {
 
@@ -1015,6 +1117,14 @@
 
         confidenceBar.style.width =
             "0%";
+
+            predictionGraph.style.display = "none";
+
+fakeProbabilityValue.textContent = "0%";
+trueProbabilityValue.textContent = "0%";
+
+fakeProbabilityBar.style.width = "0%";
+trueProbabilityBar.style.width = "0%";
 
 
         analyzeButton.disabled = false;

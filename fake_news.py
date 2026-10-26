@@ -2,6 +2,7 @@ import os
 import re
 import joblib
 import pandas as pd
+import matplotlib.pyplot as plt
 
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -332,6 +333,61 @@ print(
     )
 )
 
+
+# ============================================================
+# Get actual evaluation metrics
+# ============================================================
+report = classification_report(
+    y_test,
+    y_pred,
+    target_names=["Fake News", "True News"],
+    output_dict=True
+)
+
+# Calculate performance scores
+metrics = {
+    "Accuracy": accuracy,
+    "Precision": report["weighted avg"]["precision"],
+    "Recall": report["weighted avg"]["recall"],
+    "F1-Score": report["weighted avg"]["f1-score"]
+}
+
+# Create bar graph
+plt.figure(figsize=(9, 5))
+
+names = list(metrics.keys())
+scores = [value * 100 for value in metrics.values()]
+
+bars = plt.bar(names, scores)
+
+plt.ylim(0, 105)
+plt.ylabel("Score (%)")
+plt.xlabel("Evaluation Metrics")
+plt.title("Figure 6.1: Model Performance Results")
+
+for bar, score in zip(bars, scores):
+    plt.text(
+        bar.get_x() + bar.get_width() / 2,
+        bar.get_height() + 1,
+        f"{score:.2f}%",
+        ha="center"
+    )
+
+plt.tight_layout()
+
+# Save graph for your report
+os.makedirs("results", exist_ok=True)
+
+plt.savefig(
+    "results/figure_6_1_model_performance.png",
+    dpi=300,
+    bbox_inches="tight"
+)
+
+plt.show()
+plt.close()
+
+print("Figure 6.1 saved successfully!")
 
 # ============================================================
 # SAVE MODEL

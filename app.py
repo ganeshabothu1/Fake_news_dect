@@ -153,105 +153,82 @@ def home():
 # NEWS PREDICTION
 # ============================================================
 
-@app.route(
-    "/predict",
-    methods=["POST"]
-)
+@app.route("/predict", methods=["POST"])
 def predict():
 
     try:
-
         # Get JSON request
         data = request.get_json()
 
-
         if not data:
-
             return jsonify({
-
                 "success": False,
-
-                "message":
-                    "No data received."
-
+                "message": "No data received."
             }), 400
-
 
         # Get news text
-        news_text = data.get(
-            "news",
-            ""
-        ).strip()
+        news_text = data.get("news", "").strip()
 
-
-        # Check empty input
         if not news_text:
-
             return jsonify({
-
                 "success": False,
-
-                "message":
-                    "Please enter a news article."
-
+                "message": "Please enter a news article."
             }), 400
 
-
         # Clean text
-        cleaned_text = clean_text(
-            news_text
-        )
-
+        cleaned_text = clean_text(news_text)
 
         # Convert text to TF-IDF
-        news_vector = vectorizer.transform(
-            [cleaned_text]
-        )
-
+        news_vector = vectorizer.transform([cleaned_text])
 
         # Make prediction
-        prediction = model.predict(
-            news_vector
-        )[0]
+        prediction = model.predict(news_vector)[0]
 
+        # Get probabilities for both classes
+        probabilities = model.predict_proba(news_vector)[0]
 
-        # Get prediction probability
-        probabilities = model.predict_proba(
-            news_vector
-        )[0]
+        # Find the probability belonging to each class label
+        class_probabilities = dict(
+            zip(model.classes_, probabilities)
+        )
 
+        # Labels: 0 = Fake News, 1 = True News
+        fake_probability = float(
+            class_probabilities.get(0, 0) * 100
+        )
 
-        confidence = max(
-            probabilities
-        ) * 100
+        true_probability = float(
+            class_probabilities.get(1, 0) * 100
+        )
 
+        # Confidence of the predicted class
+        confidence = max(probabilities) * 100
 
         # Convert numeric label to result
         if prediction == 0:
-
             result = "FAKE NEWS"
-
         else:
-
             result = "TRUE NEWS"
 
-
-        # Return result
+        # Return result and both probabilities
         return jsonify({
-
             "success": True,
-
             "result": result,
-
-            "confidence":
-                round(
-                    confidence,
-                    2
-                )
-
+            "confidence": round(float(confidence), 2),
+            "fake_probability": round(fake_probability, 2),
+            "true_probability": round(true_probability, 2)
         })
 
+    except Exception as error:
+        print("Prediction error:", error)
 
+        return jsonify({
+            "success": False,
+            "message": "An error occurred while predicting the news."
+        }), 500
+
+
+    
     except Exception as error:
 
         print(
