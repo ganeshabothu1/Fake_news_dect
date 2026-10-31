@@ -10,21 +10,201 @@
           content="AI-powered Fake News Detection System using NLP, TF-IDF and Logistic Regression.">
 
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+<style>
+/* Prediction probability chart */
+.prediction-chart {
+    margin-top: 22px;
+    padding: 20px;
+    border: 1px solid #e4e8ef;
+    border-radius: 14px;
+    background: #ffffff;
+}
+.prediction-chart h4 {
+    margin: 0 0 6px;
+    font-size: 1rem;
+    color: #172033;
+}
+.prediction-chart .chart-description {
+    margin: 0 0 18px;
+    color: #667085;
+    font-size: .88rem;
+}
+.probability-row {
+    display: grid;
+    grid-template-columns: 100px minmax(0, 1fr) 58px;
+    gap: 12px;
+    align-items: center;
+    margin: 14px 0;
+}
+.probability-label { font-size: .9rem; font-weight: 600; color: #344054; }
+.probability-track {
+    height: 13px;
+    background: #edf0f5;
+    border-radius: 999px;
+    overflow: hidden;
+}
+.probability-bar {
+    height: 100%;
+    width: 0%;
+    border-radius: 999px;
+    transition: width .7s ease;
+}
+.probability-bar.fake { background: #dc3545; }
+.probability-bar.true { background: #198754; }
+.probability-value { text-align: right; font-size: .9rem; font-weight: 700; color: #344054; }
+.prediction-chart .chart-footnote { margin: 14px 0 0; font-size: .8rem; line-height: 1.5; color: #667085; }
+@media (max-width: 480px) {
+    .prediction-chart { padding: 14px; }
+    .probability-row { grid-template-columns: 82px minmax(0, 1fr) 48px; gap: 7px; }
+    .probability-label, .probability-value { font-size: .8rem; }
+}
+
+/* NEWSVERIFY ANIMATION PACK */
+:root { --motion-ease: cubic-bezier(.22, 1, .36, 1); }
+html { scroll-behavior: smooth; scroll-padding-top: 88px; }
+body { overflow-x: hidden; }
+::selection { background: rgba(88, 101, 242, .22); }
+.navbar { transition: box-shadow .35s ease, background .35s ease, backdrop-filter .35s ease; }
+.nav-links a { position: relative; transition: color .25s ease, transform .25s ease; }
+.nav-links a::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 100%;
+    bottom: -7px;
+    height: 2px;
+    border-radius: 99px;
+    background: linear-gradient(90deg,#6475ff,#27c7b8);
+    transition: right .3s var(--motion-ease);
+}
+.nav-links a:hover::after,
+.nav-links a.active::after { right: 0; }
+.logo-icon { animation: logoPulse 3s ease-in-out infinite; }
+.hero h1, .hero h2 { animation: titleRise .85s var(--motion-ease) both; }
+.hero p { animation: fadeUp .9s .14s var(--motion-ease) both; }
+.hero .hero-container > * { will-change: transform, opacity; }
+.section-heading h2,
+.dataset-content h2,
+.about-main h2 {
+    background: linear-gradient(100deg, currentColor 0%, #6475ff 48%, #20b8aa 100%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    background-size: 220% auto;
+    animation: gradientDrift 8s ease-in-out infinite;
+}
+.section-label { letter-spacing: .12em; }
+.section-label span { animation: labelBlink 2.2s ease-in-out infinite; }
+.stat-item, .dataset-card, .process-card, .technology-item,
+.highlight, .prediction-chart, .detection-card, .verification-result {
+    transition: transform .35s var(--motion-ease),
+                box-shadow .35s ease, border-color .35s ease;
+}
+.stat-item:hover, .dataset-card:hover, .process-card:hover,
+.technology-item:hover, .highlight:hover {
+    transform: translateY(-7px);
+    box-shadow: 0 18px 42px rgba(30, 45, 90, .12);
+}
+.dataset-card:hover .dataset-icon,
+.process-card:hover .process-icon { animation: iconBounce .55s ease; }
+.count-up { font-variant-numeric: tabular-nums; }
+button, .nav-button {
+    transition: transform .22s ease, box-shadow .28s ease, filter .28s ease;
+}
+button:hover, .nav-button:hover {
+    transform: translateY(-2px);
+    filter: saturate(1.12);
+    box-shadow: 0 12px 28px rgba(72, 91, 210, .2);
+}
+button:active, .nav-button:active { transform: translateY(0) scale(.98); }
+#newsText { transition: border-color .25s ease, box-shadow .25s ease, background .25s ease; }
+#newsText:focus {
+    outline: none;
+    border-color: #6878ff;
+    box-shadow: 0 0 0 4px rgba(104,120,255,.13), 0 12px 30px rgba(60,75,140,.08);
+}
+#scanningBox.show { animation: scanAppear .4s var(--motion-ease) both; }
+#scanningBox.show .line-progress { animation: progressGlow 1.2s ease-in-out infinite alternate; }
+#resultBox.show { animation: resultPop .58s var(--motion-ease) both; transform-origin: top center; }
+#resultBox.result-fake { box-shadow: 0 14px 38px rgba(220,53,69,.13); }
+#resultBox.result-true { box-shadow: 0 14px 38px rgba(25,135,84,.13); }
+.prediction-chart { animation: fadeUp .55s var(--motion-ease) both; }
+.probability-bar { position: relative; overflow: hidden; }
+.probability-bar::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(105deg,transparent 20%,rgba(255,255,255,.42) 48%,transparent 76%);
+    transform: translateX(-120%);
+}
+.prediction-chart:hover .probability-bar::after { animation: barShimmer 1.1s ease; }
+.footer a { transition: color .25s ease, transform .25s ease; }
+.footer a:hover { transform: translateX(3px); }
+.motion-ready .motion-reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity .7s var(--motion-ease), transform .7s var(--motion-ease);
+}
+.motion-ready .motion-reveal.is-visible { opacity: 1; transform: translateY(0); }
+.motion-ready .motion-reveal[data-motion="left"] { transform: translateX(-24px); }
+.motion-ready .motion-reveal[data-motion="right"] { transform: translateX(24px); }
+.motion-ready .motion-reveal[data-motion="left"].is-visible,
+.motion-ready .motion-reveal[data-motion="right"].is-visible { transform: translateX(0); }
+
+@keyframes titleRise {
+    from { opacity: 0; transform: translateY(22px); filter: blur(5px); }
+    to { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+@keyframes logoPulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(100,117,255,0); }
+    50% { box-shadow: 0 0 0 7px rgba(100,117,255,.1); }
+}
+@keyframes labelBlink { 0%,100% { opacity: 1; } 50% { opacity: .45; } }
+@keyframes iconBounce {
+    0%,100% { transform: translateY(0) rotate(0); }
+    40% { transform: translateY(-5px) rotate(-5deg); }
+    70% { transform: translateY(1px) rotate(3deg); }
+}
+@keyframes gradientDrift {
+    0%,100% { background-position: 0% center; }
+    50% { background-position: 100% center; }
+}
+@keyframes scanAppear {
+    from { opacity: 0; transform: translateY(8px) scale(.99); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes progressGlow { from { filter: brightness(.95); } to { filter: brightness(1.25); } }
+@keyframes resultPop {
+    0% { opacity: 0; transform: translateY(14px) scale(.97); }
+    70% { opacity: 1; transform: translateY(-2px) scale(1.005); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes barShimmer { to { transform: translateX(120%); } }
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        scroll-behavior: auto !important;
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+    }
+    .motion-ready .motion-reveal { opacity: 1; transform: none; }
+}
+</style>
 </head>
 
 <body>
 
-<!-- =========================
-     NAVIGATION
-========================= -->
 <header class="navbar">
     <div class="nav-container">
-
         <a href="#home" class="logo">
             <span class="logo-icon">✓</span>
             <span>NewsVerify</span>
         </a>
-
         <nav class="nav-links">
             <a href="#home">Home</a>
             <a href="#detect">Detect News</a>
@@ -32,161 +212,84 @@
             <a href="#dataset">Dataset</a>
             <a href="#about">About</a>
         </nav>
-
-        <a href="#detect" class="nav-button">
-            Check News
-        </a>
-
+        <a href="#detect" class="nav-button">Check News</a>
     </div>
 </header>
 
-
-<!-- =========================
-     HERO SECTION
-========================= -->
 <section id="home" class="hero">
-
     <div class="hero-container">
-
         <div class="hero-content">
-
             <div class="hero-badge">
                 <span class="badge-dot"></span>
                 AI-POWERED NEWS VERIFICATION
             </div>
-
             <h1>
                 Detect Fake News
                 <span>Before You Believe It.</span>
             </h1>
-
             <p class="hero-description">
                 An academic Fake News Detection System that uses
                 Natural Language Processing, TF-IDF feature extraction,
                 and Logistic Regression to classify news content.
             </p>
-
             <div class="hero-buttons">
-
                 <a href="#detect" class="primary-button">
-                    Start Detection
-                    <span>→</span>
+                    Start Detection <span>→</span>
                 </a>
-
-                <a href="#how-it-works" class="secondary-button">
-                    Explore System
-                </a>
-
+                <a href="#how-it-works" class="secondary-button">Explore System</a>
             </div>
-
             <div class="hero-tech">
-                <span>Python</span>
-                <span>Flask</span>
-                <span>NLP</span>
-                <span>TF-IDF</span>
-                <span>Machine Learning</span>
+                <span>Python</span><span>Flask</span><span>NLP</span>
+                <span>TF-IDF</span><span>Machine Learning</span>
             </div>
-
         </div>
 
-
-        <!-- Hero visual -->
         <div class="hero-visual">
-
             <div class="verification-card">
-
                 <div class="verification-header">
                     <div>
                         <small>NEWS ANALYSIS</small>
                         <h3>Verification System</h3>
                     </div>
-
-                    <div class="status-indicator">
-                        <span></span>
-                        Ready
-                    </div>
+                    <div class="status-indicator"><span></span>Ready</div>
                 </div>
-
                 <div class="analysis-lines">
-
                     <div class="analysis-line">
                         <span class="line-label">NLP Processing</span>
-                        <div class="line-track">
-                            <div class="line-progress progress-one"></div>
-                        </div>
+                        <div class="line-track"><div class="line-progress progress-one"></div></div>
                     </div>
-
                     <div class="analysis-line">
                         <span class="line-label">TF-IDF Analysis</span>
-                        <div class="line-track">
-                            <div class="line-progress progress-two"></div>
-                        </div>
+                        <div class="line-track"><div class="line-progress progress-two"></div></div>
                     </div>
-
                     <div class="analysis-line">
                         <span class="line-label">ML Classification</span>
-                        <div class="line-track">
-                            <div class="line-progress progress-three"></div>
-                        </div>
+                        <div class="line-track"><div class="line-progress progress-three"></div></div>
                     </div>
-
                 </div>
-
                 <div class="verification-result">
                     <span class="result-check">✓</span>
-
-                    <div>
-                        <small>MODEL STATUS</small>
-                        <strong>Ready for Analysis</strong>
-                    </div>
+                    <div><small>MODEL STATUS</small><strong>Ready for Analysis</strong></div>
                 </div>
-
             </div>
-
         </div>
-
     </div>
-
 </section>
 
-
-<!-- =========================
-     STATS
-========================= -->
 <section class="stats-section">
-
     <div class="stats-container">
-
         <div class="stat-item">
-            <strong>44,898</strong>
+            <strong class="count-up" data-count="{{ stats.combined_count if stats is defined and stats.combined_count is defined else 44898 }}">{{ "{:,}".format(stats.combined_count) if stats is defined and stats.combined_count is defined else "44,898" }}</strong>
             <span>News Records</span>
         </div>
-
         <div class="stat-divider"></div>
-
-        <div class="stat-item">
-            <strong>2</strong>
-            <span>News Classes</span>
-        </div>
-
+        <div class="stat-item"><strong>2</strong><span>News Classes</span></div>
         <div class="stat-divider"></div>
-
-        <div class="stat-item">
-            <strong>TF-IDF</strong>
-            <span>Feature Extraction</span>
-        </div>
-
+        <div class="stat-item"><strong>TF-IDF</strong><span>Feature Extraction</span></div>
         <div class="stat-divider"></div>
-
-        <div class="stat-item">
-            <strong>ML</strong>
-            <span>Classification</span>
-        </div>
-
+        <div class="stat-item"><strong>ML</strong><span>Classification</span></div>
     </div>
-
 </section>
-
 
 <!-- =========================
      DETECTION SECTION
@@ -194,972 +297,550 @@
 <section id="detect" class="section detection-section">
 
     <div class="section-heading">
-
-        <div class="section-label">
-            <span></span>
-            NEWS DETECTION
-        </div>
-
+        <div class="section-label"><span></span>NEWS DETECTION</div>
         <h2>Analyze a News Article</h2>
-
         <p>
             Enter a news headline or article below and let the trained
             machine learning model analyze its content.
         </p>
-
     </div>
 
-
     <div class="detector-wrapper">
-
         <div class="detector-card">
 
             <div class="detector-card-header">
-
                 <div>
                     <span class="card-number">01</span>
-
                     <div>
                         <h3>News Input</h3>
                         <p>Paste the news content you want to analyze.</p>
                     </div>
                 </div>
-
-                <span class="input-status">
-                    ● System Ready
-                </span>
-
+                <span class="input-status">● System Ready</span>
             </div>
 
-
             <div class="textarea-wrapper">
-
-                <textarea
-                    id="newsText"
+                <textarea id="newsText"
                     placeholder="Paste a news headline or article here..."
-                    aria-label="News content"
-                ></textarea>
-
+                    aria-label="News content"></textarea>
                 <div class="textarea-footer">
                     <span id="characterCount">0 characters</span>
                     <span>Recommended: headline + article text</span>
                 </div>
-
             </div>
 
-
             <div class="detector-actions">
-
-                <button
-                    type="button"
-                    id="analyzeButton"
-                    class="analyze-button"
-                    onclick="analyzeNews()"
-                >
+                <button type="button" id="analyzeButton"
+                    class="analyze-button" onclick="analyzeNews()">
                     <span class="button-icon">↗</span>
                     <span id="analyzeButtonText">Analyze News</span>
                 </button>
-
-                <button
-                    type="button"
-                    id="clearButton"
-                    class="clear-button"
-                    onclick="clearAnalysis()"
-                >
-                    Clear
-                </button>
-
+                <button type="button" id="clearButton"
+                    class="clear-button" onclick="clearAnalysis()">Clear</button>
             </div>
 
-
-            <!-- =========================
-                 SCANNING STATE
-            ========================= -->
             <div id="scanningBox" class="scanning-box">
-
                 <div class="scanner-visual">
-
                     <div class="scanner-document">
-                        <div></div>
-                        <div></div>
-                        <div></div>
-                        <div></div>
+                        <div></div><div></div><div></div><div></div>
                     </div>
-
                     <div class="scanner-line"></div>
-
                 </div>
-
                 <div class="scanning-content">
-
-                    <span class="scanning-label">
-                        ANALYZING NEWS
-                    </span>
-
-                    <h4 id="scanningText">
-                        Processing article content
-                    </h4>
-
-                    <div class="scanning-dots">
-                        <span></span>
-                        <span></span>
-                        <span></span>
-                    </div>
-
+                    <span class="scanning-label">ANALYZING NEWS</span>
+                    <h4 id="scanningText">Processing article content</h4>
+                    <div class="scanning-dots"><span></span><span></span><span></span></div>
                 </div>
-
             </div>
 
-
-            <!-- =========================
-                 RESULT
-            ========================= -->
             <div id="resultBox" class="result-box">
-
                 <div class="result-header">
-
-                    <div class="result-icon" id="resultIcon">
-                        ✓
-                    </div>
-
+                    <div class="result-icon" id="resultIcon">✓</div>
                     <div class="result-heading">
-
                         <span>ANALYSIS COMPLETE</span>
-
-                        <h3 id="resultTitle">
-                            Result
-                        </h3>
-
+                        <h3 id="resultTitle">Result</h3>
                     </div>
-
                 </div>
-
 
                 <div class="result-message">
-                    <p id="resultText">
-                        Your news analysis result will appear here.
-                    </p>
+                    <p id="resultText">Your news analysis result will appear here.</p>
                 </div>
 
-
                 <div class="confidence-section">
-
                     <div class="confidence-header">
                         <span>Model Confidence</span>
                         <strong id="confidenceValue">0%</strong>
                     </div>
-
                     <div class="confidence-track">
-                        <div
-                            id="confidenceBar"
-                            class="confidence-bar"
-                        ></div>
+                        <div id="confidenceBar" class="confidence-bar"></div>
                     </div>
-
                 </div>
 
-                                <!-- Prediction Probability Graph -->
-                <div id="predictionGraph" style="margin-top: 25px;">
+                <div id="predictionChart" class="prediction-chart" aria-live="polite">
+                    <h4>Prediction Probability Graph</h4>
+                    <p class="chart-description">Model probability for each news category</p>
 
-                    <h4>Prediction Probability</h4>
-
-                    <!-- Fake News - Red -->
-                    <div style="margin-bottom: 18px;">
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
-                            <strong style="color: #e53935;">FAKE NEWS</strong>
-                            <strong id="fakeProbabilityValue">0%</strong>
+                    <div class="probability-row">
+                        <span class="probability-label">Fake News</span>
+                        <div class="probability-track" role="img" aria-label="Fake News probability">
+                            <div id="fakeProbabilityBar" class="probability-bar fake"></div>
                         </div>
-
-                        <div style="height: 24px; background: #eee; border-radius: 8px; overflow: hidden;">
-                            <div id="fakeProbabilityBar"
-                                 style="height: 100%; width: 0%; background: #e53935; transition: width 1s;">
-                            </div>
-                        </div>
+                        <strong id="fakeProbabilityValue" class="probability-value">—</strong>
                     </div>
 
-                    <!-- True News - Green -->
-                    <div style="margin-bottom: 18px;">
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
-                            <strong style="color: #2e7d32;">TRUE NEWS</strong>
-                            <strong id="trueProbabilityValue">0%</strong>
+                    <div class="probability-row">
+                        <span class="probability-label">True News</span>
+                        <div class="probability-track" role="img" aria-label="True News probability">
+                            <div id="trueProbabilityBar" class="probability-bar true"></div>
                         </div>
-
-                        <div style="height: 24px; background: #eee; border-radius: 8px; overflow: hidden;">
-                            <div id="trueProbabilityBar"
-                                 style="height: 100%; width: 0%; background: #2e7d32; transition: width 1s;">
-                            </div>
-                        </div>
+                        <strong id="trueProbabilityValue" class="probability-value">—</strong>
                     </div>
 
+                    <p class="chart-footnote">
+                        These bars show the model's estimated class probabilities,
+                        not proof that an article is factually true or false.
+                    </p>
                 </div>
 
                 <div class="result-note">
                     <span>ⓘ</span>
-                    This prediction represents the classification made by
-                    the trained machine learning model. It is not an
-                    absolute fact-checking service.
+                    This prediction represents the classification made by the
+                    trained machine learning model. It is not an absolute
+                    fact-checking service.
                 </div>
-
             </div>
-
         </div>
-
     </div>
-
 </section>
-
 
 <!-- =========================
      HOW IT WORKS
 ========================= -->
 <section id="how-it-works" class="section process-section">
-
     <div class="section-heading">
-
-        <div class="section-label">
-            <span></span>
-            SYSTEM WORKFLOW
-        </div>
-
+        <div class="section-label"><span></span>SYSTEM WORKFLOW</div>
         <h2>How the System Works</h2>
-
-        <p>
-            The system follows a structured machine learning pipeline
-            from news input to final classification.
-        </p>
-
+        <p>The system follows a structured machine learning pipeline from news input to final classification.</p>
     </div>
-
 
     <div class="process-grid">
-
         <div class="process-card">
-
             <div class="process-number">01</div>
-
             <div class="process-icon">↓</div>
-
             <h3>News Input</h3>
-
-            <p>
-                The user provides a news headline or article
-                through the detection interface.
-            </p>
-
+            <p>The user provides a news headline or article through the detection interface.</p>
         </div>
 
-
         <div class="process-card">
-
             <div class="process-number">02</div>
-
             <div class="process-icon">⌕</div>
-
             <h3>Text Processing</h3>
-
-            <p>
-                The news content is cleaned and prepared
-                for natural language processing.
-            </p>
-
+            <p>The news content is cleaned and prepared for natural language processing.</p>
         </div>
 
-
         <div class="process-card">
-
             <div class="process-number">03</div>
-
             <div class="process-icon">▦</div>
-
             <h3>TF-IDF</h3>
-
-            <p>
-                Important words and phrases are converted
-                into numerical features using TF-IDF.
-            </p>
-
+            <p>Important words and phrases are converted into numerical features using TF-IDF.</p>
         </div>
-
 
         <div class="process-card">
-
             <div class="process-number">04</div>
-
             <div class="process-icon">✓</div>
-
             <h3>Classification</h3>
-
-            <p>
-                Logistic Regression classifies the input
-                as Fake News or True News.
-            </p>
-
+            <p>Logistic Regression classifies the input as Fake News or True News.</p>
         </div>
-
     </div>
-
 </section>
-
 
 <!-- =========================
      DATASET
 ========================= -->
 <section id="dataset" class="section dataset-section">
-
     <div class="dataset-container">
 
         <div class="dataset-content">
-
-            <div class="section-label">
-                <span></span>
-                TRAINING DATASET
-            </div>
-
+            <div class="section-label"><span></span>TRAINING DATASET</div>
             <h2>Built Using Real News Data</h2>
-
             <p>
-                The model is trained using separate fake and true news
-                datasets containing news titles, article text, subjects,
-                and dates.
+                The model is trained using separate fake and true news datasets
+                containing news titles, article text, subjects, and dates.
             </p>
-
             <p class="dataset-note">
-                The dataset is used for machine learning training and
-                evaluation. The model learns language patterns from
-                previously labelled examples.
+                The dataset is used for machine learning training and evaluation.
+                The model learns language patterns from previously labelled examples.
             </p>
-
         </div>
-
 
         <div class="dataset-cards">
-
             <div class="dataset-card fake-dataset">
-
                 <span class="dataset-icon">!</span>
-
                 <div>
-                    <strong>23,481</strong>
+                    <strong class="count-up"
+                        data-count="{{ stats.fake_count if stats is defined and stats.fake_count is defined else 23481 }}">{{ "{:,}".format(stats.fake_count) if stats is defined and stats.fake_count is defined else "23,481" }}</strong>
                     <span>Fake News Records</span>
                 </div>
-
             </div>
-
 
             <div class="dataset-card true-dataset">
-
                 <span class="dataset-icon">✓</span>
-
                 <div>
-                    <strong>21,417</strong>
+                    <strong class="count-up"
+                        data-count="{{ stats.true_count if stats is defined and stats.true_count is defined else 21417 }}">{{ "{:,}".format(stats.true_count) if stats is defined and stats.true_count is defined else "21,417" }}</strong>
                     <span>True News Records</span>
                 </div>
-
             </div>
 
-
             <div class="dataset-card total-dataset">
-
                 <span class="dataset-icon">Σ</span>
-
                 <div>
-                    <strong>44,898</strong>
+                    <strong class="count-up"
+                        data-count="{{ stats.combined_count if stats is defined and stats.combined_count is defined else 44898 }}">{{ "{:,}".format(stats.combined_count) if stats is defined and stats.combined_count is defined else "44,898" }}</strong>
                     <span>Total Records</span>
                 </div>
+                        <!-- DATASET FILES AND COLUMN HEADINGS -->
+
+        <div class="dataset-details">
+
+            <div class="section-heading">
+                <h2>Dataset Files & Column Headings</h2>
+                <p>Explore the files and columns used in this project.</p>
+            </div>
+
+            <div class="dataset-details-grid">
+
+                {% for dataset in datasets %}
+
+                <div class="dataset-detail-card">
+
+                    <div class="dataset-detail-header">
+                        <span class="dataset-icon">📊</span>
+                        <div>
+                            <h3>{{ dataset.name }}</h3>
+                            <p>{{ "{:,}".format(dataset.rows) }} Records</p>
+                        </div>
+                    </div>
+
+                    <div class="dataset-columns">
+                        <h4>Column Headings</h4>
+
+                        {% for column in dataset.columns %}
+
+                        <div class="column-item">
+                            <span>{{ loop.index }}.</span>
+                            <strong>{{ column }}</strong>
+                        </div>
+
+                        {% endfor %}
+
+                    </div>
+
+                </div>
+
+                {% endfor %}
 
             </div>
 
         </div>
-
+            </div>
+        </div>
     </div>
-
 </section>
-
 
 <!-- =========================
      TECHNOLOGIES
 ========================= -->
 <section class="section technology-section">
-
     <div class="section-heading">
-
-        <div class="section-label">
-            <span></span>
-            TECHNOLOGY STACK
-        </div>
-
+        <div class="section-label"><span></span>TECHNOLOGY STACK</div>
         <h2>Technologies Used</h2>
-
-        <p>
-            A combination of machine learning, backend development,
-            and modern web technologies powers the system.
-        </p>
-
+        <p>A combination of machine learning, backend development, and modern web technologies powers the system.</p>
     </div>
-
 
     <div class="technology-grid">
-
-        <div class="technology-item">
-            <strong>Python</strong>
-            <span>Programming</span>
-        </div>
-
-        <div class="technology-item">
-            <strong>Flask</strong>
-            <span>Backend</span>
-        </div>
-
-        <div class="technology-item">
-            <strong>NLP</strong>
-            <span>Text Processing</span>
-        </div>
-
-        <div class="technology-item">
-            <strong>TF-IDF</strong>
-            <span>Feature Extraction</span>
-        </div>
-
-        <div class="technology-item">
-            <strong>Scikit-learn</strong>
-            <span>Machine Learning</span>
-        </div>
-
-        <div class="technology-item">
-            <strong>Logistic Regression</strong>
-            <span>Classification</span>
-        </div>
-
-        <div class="technology-item">
-            <strong>HTML / CSS</strong>
-            <span>Frontend</span>
-        </div>
-
-        <div class="technology-item">
-            <strong>JavaScript</strong>
-            <span>Interaction</span>
-        </div>
-
+        <div class="technology-item"><strong>Python</strong><span>Programming</span></div>
+        <div class="technology-item"><strong>Flask</strong><span>Backend</span></div>
+        <div class="technology-item"><strong>NLP</strong><span>Text Processing</span></div>
+        <div class="technology-item"><strong>TF-IDF</strong><span>Feature Extraction</span></div>
+        <div class="technology-item"><strong>Scikit-learn</strong><span>Machine Learning</span></div>
+        <div class="technology-item"><strong>Logistic Regression</strong><span>Classification</span></div>
+        <div class="technology-item"><strong>HTML / CSS</strong><span>Frontend</span></div>
+        <div class="technology-item"><strong>JavaScript</strong><span>Interaction</span></div>
     </div>
-
 </section>
-
 
 <!-- =========================
      ABOUT
 ========================= -->
 <section id="about" class="section about-section">
-
     <div class="about-container">
-
         <div class="about-main">
-
-            <div class="section-label">
-                <span></span>
-                ABOUT THE PROJECT
-            </div>
-
+            <div class="section-label"><span></span>ABOUT THE PROJECT</div>
             <h2>Fake News Detection System</h2>
-
             <p>
                 This academic project demonstrates how Natural Language
                 Processing and machine learning can be applied to news
                 text classification.
             </p>
-
             <p>
                 The system processes news content, converts text into
                 numerical features using TF-IDF, and uses a trained
                 Logistic Regression model to classify the content into
                 Fake News or True News.
             </p>
-
         </div>
-
 
         <div class="about-highlights">
-
             <div class="highlight">
                 <span>01</span>
-                <div>
-                    <strong>NLP Based</strong>
-                    <p>Analyzes textual news content.</p>
-                </div>
+                <div><strong>NLP Based</strong><p>Analyzes textual news content.</p></div>
             </div>
-
             <div class="highlight">
                 <span>02</span>
-                <div>
-                    <strong>ML Powered</strong>
-                    <p>Uses Logistic Regression classification.</p>
-                </div>
+                <div><strong>ML Powered</strong><p>Uses Logistic Regression classification.</p></div>
             </div>
-
             <div class="highlight">
                 <span>03</span>
-                <div>
-                    <strong>Web Based</strong>
-                    <p>Accessible through a Flask web interface.</p>
-                </div>
+                <div><strong>Web Based</strong><p>Accessible through a Flask web interface.</p></div>
             </div>
-
         </div>
-
     </div>
-
 </section>
-
 
 <!-- =========================
      FOOTER
 ========================= -->
 <footer class="footer">
-
     <div class="footer-container">
-
         <div class="footer-brand">
-
             <a href="#home" class="logo">
                 <span class="logo-icon">✓</span>
                 <span>NewsVerify</span>
             </a>
-
             <p>
                 AI-powered academic Fake News Detection System
                 using Natural Language Processing and Machine Learning.
             </p>
-
         </div>
 
-
         <div class="footer-links">
-
             <div>
                 <strong>Navigation</strong>
                 <a href="#home">Home</a>
                 <a href="#detect">Detect News</a>
                 <a href="#how-it-works">How It Works</a>
             </div>
-
             <div>
                 <strong>Project</strong>
                 <a href="#dataset">Dataset</a>
                 <a href="#about">About</a>
                 <a href="#detect">Analyze</a>
             </div>
-
         </div>
-
     </div>
-
 
     <div class="footer-bottom">
-
-        <span>
-            © 2026 Fake News Detection System
-        </span>
-
-        <span>
-            Academic Machine Learning Project
-        </span>
-
+        <span>© 2026 Fake News Detection System</span>
+        <span>Academic Machine Learning Project</span>
     </div>
-
 </footer>
-
 
 <!-- =========================
      JAVASCRIPT
 ========================= -->
 <script>
-
-    const newsText = document.getElementById("newsText");
-    const analyzeButton = document.getElementById("analyzeButton");
-    const analyzeButtonText = document.getElementById("analyzeButtonText");
-
-    const scanningBox = document.getElementById("scanningBox");
-    const scanningText = document.getElementById("scanningText");
-
-    const resultBox = document.getElementById("resultBox");
-    const resultIcon = document.getElementById("resultIcon");
-    const resultTitle = document.getElementById("resultTitle");
-    const resultText = document.getElementById("resultText");
-
-    const confidenceValue = document.getElementById("confidenceValue");
-    const confidenceBar = document.getElementById("confidenceBar");
-
-    // Prediction graph elements
-const predictionGraph = document.getElementById("predictionGraph");
-const fakeProbabilityValue = document.getElementById("fakeProbabilityValue");
-const trueProbabilityValue = document.getElementById("trueProbabilityValue");
+const newsText = document.getElementById("newsText");
+const analyzeButton = document.getElementById("analyzeButton");
+const analyzeButtonText = document.getElementById("analyzeButtonText");
+const scanningBox = document.getElementById("scanningBox");
+const scanningText = document.getElementById("scanningText");
+const resultBox = document.getElementById("resultBox");
+const resultIcon = document.getElementById("resultIcon");
+const resultTitle = document.getElementById("resultTitle");
+const resultText = document.getElementById("resultText");
+const confidenceValue = document.getElementById("confidenceValue");
+const confidenceBar = document.getElementById("confidenceBar");
 const fakeProbabilityBar = document.getElementById("fakeProbabilityBar");
 const trueProbabilityBar = document.getElementById("trueProbabilityBar");
+const fakeProbabilityValue = document.getElementById("fakeProbabilityValue");
+const trueProbabilityValue = document.getElementById("trueProbabilityValue");
+const characterCount = document.getElementById("characterCount");
 
-    const characterCount = document.getElementById("characterCount");
+newsText.addEventListener("input", function () {
+    characterCount.textContent = newsText.value.length + " characters";
+});
 
-    /* =========================
-   PREDICTION GRAPH FUNCTION
-========================= */
+async function analyzeNews() {
+    const text = newsText.value.trim();
 
-function showPredictionGraph(data) {
-
-    const fake = Number(data.fake_probability);
-    const truth = Number(data.true_probability);
-
-    if (!Number.isFinite(fake) || !Number.isFinite(truth)) {
-        console.error("Fake/True probabilities are missing.");
+    if (!text) {
+        alert("Please enter some news content first.");
+        newsText.focus();
         return;
     }
 
-    predictionGraph.style.display = "block";
-
-    fakeProbabilityValue.textContent = fake.toFixed(2) + "%";
-    trueProbabilityValue.textContent = truth.toFixed(2) + "%";
-
-    fakeProbabilityBar.style.width =
-        Math.max(0, Math.min(100, fake)) + "%";
-
-    trueProbabilityBar.style.width =
-        Math.max(0, Math.min(100, truth)) + "%";
-}
-
-
-    /* =========================
-       CHARACTER COUNT
-    ========================= */
-
-    newsText.addEventListener("input", function () {
-
-        characterCount.textContent =
-            newsText.value.length + " characters";
-
-    });
-
-
-    /* =========================
-       ANALYZE NEWS
-    ========================= */
-
-    async function analyzeNews() {
-
-        const text = newsText.value.trim();
-
-        if (!text) {
-
-            alert("Please enter some news content first.");
-
-            newsText.focus();
-
-            return;
-        }
-
-
-        /* Reset previous result */
-
-        resultBox.classList.remove(
-            "show",
-            "result-fake",
-            "result-true",
-            "result-error"
-        );
-
-
-        /* Disable button */
-
-        analyzeButton.disabled = true;
-
-        analyzeButtonText.textContent = "Analyzing...";
-
-
-        /* Show scanning animation */
-
-        scanningBox.classList.add("show");
-
-
-        const scanningMessages = [
-            "Processing article content",
-            "Extracting important text features",
-            "Running TF-IDF analysis",
-            "Applying machine learning model",
-            "Preparing classification result"
-        ];
-
-
-        let messageIndex = 0;
-
-        const scanningInterval = setInterval(function () {
-
-            scanningText.textContent =
-                scanningMessages[messageIndex];
-
-            messageIndex =
-                (messageIndex + 1) % scanningMessages.length;
-
-        }, 650);
-
-
-        try {
-
-            /* =========================
-               SEND DATA TO FLASK
-            ========================= */
-
-            const response = await fetch("/predict", {
-
-                method: "POST",
-
-                headers: {
-                    "Content-Type": "application/json"
-                },
-
-                body: JSON.stringify({
-                    news: text
-                })
-
-            });
-
-
-            const data = await response.json();
-
-
-            if (!response.ok) {
-
-                throw new Error(
-                    data.message || data.error || "Prediction failed."
-                );
-
-            }
-
-
-            /* Stop scanning */
-
-            clearInterval(scanningInterval);
-
-            scanningBox.classList.remove("show");
-
-            showPredictionGraph(data);
-
-            /* =========================
-               PREDICTION
-            ========================= */
-
-            const prediction =
-                String(data.result || "").trim();
-
-            const isFake =
-                prediction === "FAKE NEWS" ||
-                prediction === "Fake News" ||
-                prediction === "FAKE";
-
-
-            /* =========================
-               CONFIDENCE
-            ========================= */
-
-            let confidence =
-                parseFloat(data.confidence);
-
-
-            if (Number.isNaN(confidence)) {
-                confidence = 0;
-            }
-
-
-            confidence =
-                Math.max(0, Math.min(100, confidence));
-
-
-            /* =========================
-               RESULT DISPLAY
-            ========================= */
-
-            if (isFake) {
-
-                resultBox.classList.add("show", "result-fake");
-
-                resultIcon.textContent = "!";
-
-                resultTitle.textContent =
-                    "FAKE NEWS";
-
-                resultText.textContent =
-                    "The trained machine learning model classified this news content as Fake News.";
-
-            } else {
-
-                resultBox.classList.add("show", "result-true");
-
-                resultIcon.textContent = "✓";
-
-                resultTitle.textContent =
-                    "TRUE NEWS";
-
-                resultText.textContent =
-                    "The trained machine learning model classified this news content as True News.";
-
-            }
-
-
-            /* Display confidence */
-
-            confidenceValue.textContent =
-                confidence.toFixed(2) + "%";
-
-
-            /* Animate confidence bar */
-
-            confidenceBar.style.width = "0%";
-
-            setTimeout(function () {
-
-                confidenceBar.style.width =
-                    confidence + "%";
-
-            }, 100);
-
-            /* =========================
-   PREDICTION GRAPH
-========================= */
-
-let fakeProbability = Number(data.fake_probability);
-let trueProbability = Number(data.true_probability);
-
-// Backend probabilities ivvakapothe fallback
-if (!Number.isFinite(fakeProbability) ||
-    !Number.isFinite(trueProbability)) {
-
-    fakeProbability = isFake ? confidence : 100 - confidence;
-    trueProbability = 100 - fakeProbability;
-}
-
-fakeProbability = Math.max(0, Math.min(100, fakeProbability));
-trueProbability = Math.max(0, Math.min(100, trueProbability));
-
-predictionGraph.style.display = "block";
-
-fakeProbabilityValue.textContent =
-    fakeProbability.toFixed(2) + "%";
-
-trueProbabilityValue.textContent =
-    trueProbability.toFixed(2) + "%";
-
-fakeProbabilityBar.style.width = "0%";
-trueProbabilityBar.style.width = "0%";
-
-setTimeout(function () {
-    fakeProbabilityBar.style.width = fakeProbability + "%";
-    trueProbabilityBar.style.width = trueProbability + "%";
-}, 100);
-
-        } catch (error) {
-
-            clearInterval(scanningInterval);
-
-            scanningBox.classList.remove("show");
-
-
-            resultBox.classList.add(
-                "show",
-                "result-error"
+    resultBox.classList.remove(
+        "show", "result-fake", "result-true", "result-error"
+    );
+
+    analyzeButton.disabled = true;
+    analyzeButtonText.textContent = "Analyzing...";
+    scanningBox.classList.add("show");
+
+    const scanningMessages = [
+        "Processing article content",
+        "Extracting important text features",
+        "Running TF-IDF analysis",
+        "Applying machine learning model",
+        "Preparing classification result"
+    ];
+
+    let messageIndex = 0;
+
+    scanningText.textContent = scanningMessages[0];
+
+    const scanningInterval = setInterval(function () {
+        messageIndex = (messageIndex + 1) % scanningMessages.length;
+        scanningText.textContent = scanningMessages[messageIndex];
+    }, 650);
+
+    try {
+        const response = await fetch("/predict", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                news: text
+            })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(
+                data.message || data.error || "Prediction failed."
             );
-
-            resultIcon.textContent = "!";
-
-            resultTitle.textContent =
-                "Analysis Error";
-
-            resultText.textContent =
-                error.message ||
-                "Unable to connect to the prediction service.";
-
-            confidenceValue.textContent = "—";
-
-            confidenceBar.style.width = "0%";
-
         }
 
-
-        /* Enable button */
-
-        analyzeButton.disabled = false;
-
-        analyzeButtonText.textContent =
-            "Analyze Again";
-
-    }
-
-
-    /* =========================
-       CLEAR ANALYSIS
-    ========================= */
-
-    function clearAnalysis() {
-
-        newsText.value = "";
-
-        characterCount.textContent =
-            "0 characters";
-
-
-        resultBox.classList.remove(
-            "show",
-            "result-fake",
-            "result-true",
-            "result-error"
-        );
-
-
+        clearInterval(scanningInterval);
         scanningBox.classList.remove("show");
 
+        const prediction = String(data.result || "").trim().toUpperCase();
+        const isFake = prediction === "FAKE NEWS" || prediction === "FAKE";
 
-        confidenceValue.textContent =
-            "0%";
+        let confidence = parseFloat(data.confidence);
 
-        confidenceBar.style.width =
-            "0%";
-
-            predictionGraph.style.display = "none";
-
-fakeProbabilityValue.textContent = "0%";
-trueProbabilityValue.textContent = "0%";
-
-fakeProbabilityBar.style.width = "0%";
-trueProbabilityBar.style.width = "0%";
-
-
-        analyzeButton.disabled = false;
-
-        analyzeButtonText.textContent =
-            "Analyze News";
-
-
-        newsText.focus();
-
-    }
-
-
-    /* =========================
-       NAVBAR SCROLL EFFECT
-    ========================= */
-
-    window.addEventListener("scroll", function () {
-
-        const navbar =
-            document.querySelector(".navbar");
-
-        if (window.scrollY > 20) {
-
-            navbar.classList.add("scrolled");
-
-        } else {
-
-            navbar.classList.remove("scrolled");
-
+        if (Number.isNaN(confidence)) {
+            confidence = 0;
         }
 
-    });
+        confidence = Math.max(0, Math.min(100, confidence));
 
+        if (isFake) {
+            resultBox.classList.add("show", "result-fake");
+            resultIcon.textContent = "!";
+            resultTitle.textContent = "FAKE NEWS";
+            resultText.textContent =
+                "The trained machine learning model classified this news content as Fake News.";
+        } else {
+            resultBox.classList.add("show", "result-true");
+            resultIcon.textContent = "✓";
+            resultTitle.textContent = "TRUE NEWS";
+            resultText.textContent =
+                "The trained machine learning model classified this news content as True News.";
+        }
+
+        confidenceValue.textContent = confidence.toFixed(2) + "%";
+        confidenceBar.style.width = "0%";
+
+        setTimeout(function () {
+            confidenceBar.style.width = confidence + "%";
+        }, 100);
+
+        let fakeProbability = Number(data.fake_probability);
+        let trueProbability = Number(data.true_probability);
+
+        if (!Number.isFinite(fakeProbability) ||
+            !Number.isFinite(trueProbability)) {
+            fakeProbability = isFake ? confidence : 100 - confidence;
+            trueProbability = isFake ? 100 - confidence : confidence;
+        }
+
+        fakeProbability = Math.max(0, Math.min(100, fakeProbability));
+        trueProbability = Math.max(0, Math.min(100, trueProbability));
+
+        fakeProbabilityValue.textContent = fakeProbability.toFixed(2) + "%";
+        trueProbabilityValue.textContent = trueProbability.toFixed(2) + "%";
+
+        fakeProbabilityBar.style.width = "0%";
+        trueProbabilityBar.style.width = "0%";
+
+        setTimeout(function () {
+            fakeProbabilityBar.style.width = fakeProbability + "%";
+            trueProbabilityBar.style.width = trueProbability + "%";
+        }, 120);
+
+    } catch (error) {
+        clearInterval(scanningInterval);
+        scanningBox.classList.remove("show");
+
+        resultBox.classList.add("show", "result-error");
+        resultIcon.textContent = "!";
+        resultTitle.textContent = "Analysis Error";
+        resultText.textContent =
+            error.message || "Unable to connect to the prediction service.";
+
+        confidenceValue.textContent = "—";
+        confidenceBar.style.width = "0%";
+
+        fakeProbabilityValue.textContent = "—";
+        trueProbabilityValue.textContent = "—";
+        fakeProbabilityBar.style.width = "0%";
+        trueProbabilityBar.style.width = "0%";
+
+    } finally {
+        analyzeButton.disabled = false;
+        analyzeButtonText.textContent = "Analyze Again";
+    }
+}
+
+function clearAnalysis() {
+    newsText.value = "";
+    characterCount.textContent = "0 characters";
+
+    resultBox.classList.remove(
+        "show", "result-fake", "result-true", "result-error"
+    );
+
+    scanningBox.classList.remove("show");
+
+    confidenceValue.textContent = "0%";
+    confidenceBar.style.width = "0%";
+
+    fakeProbabilityValue.textContent = "—";
+    trueProbabilityValue.textContent = "—";
+    fakeProbabilityBar.style.width = "0%";
+    trueProbabilityBar.style.width = "0%";
+
+    analyzeButton.disabled = false;
+    analyzeButtonText.textContent = "Analyze News";
+
+    newsText.focus();
+}
+
+window.addEventListener("scroll", function () {
+    const navbar = document.querySelector(".navbar");
+
+    if (window.scrollY > 20) {
+        navbar.classList.add("scrolled");
+    } else {
+        navbar.classList.remove("scrolled");
+    }
+});
 </script>
+
 <script>
 const sections = document.querySelectorAll("section[id]");
 const navLinks = document.querySelectorAll(".nav-links a");
@@ -1181,5 +862,100 @@ window.addEventListener("scroll", () => {
     });
 });
 </script>
+
+<script>
+/* Scroll reveals, staggered cards, and animated dataset counters */
+(function () {
+    document.body.classList.add("motion-ready");
+
+    const reduceMotion = window.matchMedia(
+        "(prefers-reduced-motion: reduce)"
+    ).matches;
+
+    const revealTargets = document.querySelectorAll(
+        ".section-heading, .stat-item, .dataset-card, .process-card, " +
+        ".technology-item, .about-main, .highlight, .prediction-chart"
+    );
+
+    revealTargets.forEach((element, index) => {
+        element.classList.add("motion-reveal");
+
+        if (element.matches(".about-main")) {
+            element.dataset.motion = "left";
+        } else if (element.matches(".highlight")) {
+            element.dataset.motion = "right";
+        }
+
+        element.style.transitionDelay = (index % 4) * 75 + "ms";
+    });
+
+    if (reduceMotion || !("IntersectionObserver" in window)) {
+        revealTargets.forEach(element => {
+            element.classList.add("is-visible");
+        });
+    } else {
+        const observer = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add("is-visible");
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, {
+            threshold: 0.12,
+            rootMargin: "0px 0px -35px 0px"
+        });
+
+        revealTargets.forEach(element => observer.observe(element));
+    }
+
+    const countNodes = document.querySelectorAll(".count-up[data-count]");
+
+    const animateCount = node => {
+        const target = Number(node.dataset.count);
+
+        if (!Number.isFinite(target)) return;
+
+        if (reduceMotion) {
+            node.textContent = target.toLocaleString();
+            return;
+        }
+
+        const duration = 1200;
+        const start = performance.now();
+
+        const frame = now => {
+            const progress = Math.min((now - start) / duration, 1);
+            const eased = 1 - Math.pow(1 - progress, 4);
+
+            node.textContent = Math.round(
+                target * eased
+            ).toLocaleString();
+
+            if (progress < 1) {
+                requestAnimationFrame(frame);
+            }
+        };
+
+        requestAnimationFrame(frame);
+    };
+
+    if ("IntersectionObserver" in window && !reduceMotion) {
+        const counterObserver = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    animateCount(entry.target);
+                    counterObserver.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.6 });
+
+        countNodes.forEach(node => counterObserver.observe(node));
+    } else {
+        countNodes.forEach(animateCount);
+    }
+})();
+</script>
+
 </body>
 </html>
