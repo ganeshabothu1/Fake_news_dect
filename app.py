@@ -4,6 +4,7 @@ import re
 import joblib
 import pandas as pd
 import requests
+import joblib
 import xml.etree.ElementTree as ET
 
 from flask import Flask, render_template, request, jsonify
@@ -438,15 +439,16 @@ def predict():
 
 if __name__ == "__main__":
 
+    port = int(os.environ.get("PORT", 5000))
+
     print("\n" + "=" * 50)
-
     print("       FAKE NEWS DETECTION WEB APP")
-
     print("=" * 50)
 
-    print("Open: http://127.0.0.1:5000/\n")
+    print(f"Server running on port: {port}")
 
     app.run(
-        debug=True,
-        port=5000
+        host="0.0.0.0",
+        port=port,
+        debug=False
     )
