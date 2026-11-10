@@ -3,6 +3,8 @@ import os
 import re
 import joblib
 import pandas as pd
+import requests
+import xml.etree.ElementTree as ET
 
 from flask import Flask, render_template, request, jsonify
 
@@ -214,15 +216,105 @@ def home():
 
     datasets = get_dataset_details()
 
+    evaluation = {
+        "accuracy": "98.65%",
+        "auc": "0.9985",
+        "confusion_matrix": [
+            [4482, 72],
+            [47, 4236]
+        ]
+    }
+
     return render_template(
         "index.html",
         stats=stats,
-        datasets=datasets
+        datasets=datasets,
+        evaluation=evaluation
     )
 
-
+    
 # ============================================================
 # NEWS PREDICTION
+# ============================================================
+# ============================================================
+# INTERNET NEWS VERIFICATION
+# ============================================================
+
+def verify_news_online(news_text):
+
+    try:
+        # Prepare search query
+        search_query = " ".join(news_text.split()[:15])
+
+        url = "https://news.google.com/rss/search"
+
+        params = {
+            "q": search_query,
+            "hl": "en-IN",
+            "gl": "IN",
+            "ceid": "IN:en"
+        }
+
+        response = requests.get(
+            url,
+            params=params,
+            headers={"User-Agent": "Mozilla/5.0"},
+            timeout=10
+        )
+
+        response.raise_for_status()
+
+        root = ET.fromstring(response.content)
+
+        articles = []
+
+        for item in root.findall(".//item")[:5]:
+
+            source = item.find("source")
+
+            articles.append({
+
+                "title": item.findtext("title", ""),
+
+                "link": item.findtext("link", ""),
+
+                "published": item.findtext("pubDate", ""),
+
+                "source": (
+                    source.text
+                    if source is not None
+                    else "Unknown"
+                )
+
+            })
+
+        if articles:
+
+            return {
+                "status": "RELATED_ARTICLES_FOUND",
+                "message": "Related news articles found online.",
+                "articles": articles
+            }
+
+        return {
+            "status": "NO_MATCHING_ARTICLES_FOUND",
+            "message": "No related news articles found.",
+            "articles": []
+        }
+
+    except Exception:
+
+        app.logger.exception(
+            "Internet verification error"
+        )
+
+        return {
+            "status": "UNAVAILABLE",
+            "message": "Internet news search is currently unavailable.",
+            "articles": []
+        }
+   # ============================================================
+# NEWS PREDICTION + INTERNET NEWS SEARCH
 # ============================================================
 
 @app.route("/predict", methods=["POST"])
@@ -233,7 +325,6 @@ def predict():
         data = request.get_json(silent=True)
 
         if not data:
-
             return jsonify({
                 "success": False,
                 "message": "No data received."
@@ -242,11 +333,14 @@ def predict():
         news_text = data.get("news", "").strip()
 
         if not news_text:
-
             return jsonify({
                 "success": False,
                 "message": "Please enter a news article."
             }), 400
+
+        # --------------------------------
+        # 1. MACHINE LEARNING PREDICTION
+        # --------------------------------
 
         cleaned_text = clean_text(news_text)
 
@@ -261,6 +355,11 @@ def predict():
         probabilities = model.predict_proba(
             news_vector
         )[0]
+
+        # DEBUG INFORMATION
+        print("MODEL CLASSES:", model.classes_)
+        print("PREDICTION:", prediction)
+        print("PROBABILITIES:", probabilities)
 
         class_probabilities = dict(
             zip(model.classes_, probabilities)
@@ -282,6 +381,18 @@ def predict():
             else "TRUE NEWS"
         )
 
+        # --------------------------------
+        # 2. INTERNET NEWS SEARCH
+        # --------------------------------
+
+        internet_result = verify_news_online(
+            news_text
+        )
+
+        # --------------------------------
+        # 3. SEND RESPONSE
+        # --------------------------------
+
         return jsonify({
 
             "success": True,
@@ -298,7 +409,9 @@ def predict():
 
             "true_probability": round(
                 true_probability, 2
-            )
+            ),
+
+            "internet_verification": internet_result
 
         })
 

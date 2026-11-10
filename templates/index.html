@@ -457,6 +457,62 @@ button:active, .nav-button:active { transform: translateY(0) scale(.98); }
 <!-- =========================
      DATASET
 ========================= -->
+<!-- MODEL EVALUATION SECTION -->
+<section id="evaluation" class="evaluation-section">
+
+    <div class="container">
+
+        <div class="section-header">
+            <span class="section-tag">MODEL PERFORMANCE</span>
+            <h2>Model Evaluation</h2>
+            <p>
+                Performance of the Logistic Regression model
+                using test dataset.
+            </p>
+        </div>
+
+        <div class="evaluation-stats">
+
+            <div class="evaluation-card">
+                <h3>Accuracy</h3>
+                <p>{{ evaluation.accuracy }}</p>
+            </div>
+
+            <div class="evaluation-card">
+                <h3>AUC Score</h3>
+                <p>{{ evaluation.auc }}</p>
+            </div>
+
+        </div>
+
+        <div class="evaluation-graphs">
+
+            <div class="evaluation-graph-card">
+                <h3>Model Performance</h3>
+                <img
+                    src="{{ url_for('static', filename='images/evaluation/figure_6_1_model_performance.png') }}"
+                    alt="Model Performance Graph">
+            </div>
+
+            <div class="evaluation-graph-card">
+                <h3>Confusion Matrix</h3>
+                <img
+                    src="{{ url_for('static', filename='images/evaluation/figure_6_2_confusion_matrix.png') }}"
+                    alt="Confusion Matrix">
+            </div>
+
+            <div class="evaluation-graph-card">
+                <h3>ROC Curve</h3>
+                <img
+                    src="{{ url_for('static', filename='images/evaluation/figure_6_3_roc_curve.png') }}"
+                    alt="ROC Curve">
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
 <section id="dataset" class="section dataset-section">
     <div class="dataset-container">
 
@@ -782,6 +838,108 @@ async function analyzeNews() {
             trueProbabilityBar.style.width = trueProbability + "%";
         }, 120);
 
+        // -----------------------------------------
+        // INTERNET VERIFICATION RESULTS
+        // -----------------------------------------
+
+        let internetData = data.internet_verification;
+
+        // Remove previous internet results
+        let internetBox = document.getElementById(
+            "internetVerificationResult"
+        );
+
+        if (!internetBox) {
+            internetBox = document.createElement("div");
+            internetBox.id = "internetVerificationResult";
+            resultBox.appendChild(internetBox);
+        }
+
+        internetBox.innerHTML = "";
+
+        // Create heading
+        const internetHeading = document.createElement("h3");
+        internetHeading.textContent = "Internet News Verification";
+        internetHeading.style.marginTop = "25px";
+        internetBox.appendChild(internetHeading);
+
+        if (internetData) {
+
+            const status = document.createElement("p");
+            status.textContent = internetData.message || "Internet search completed.";
+            status.style.fontWeight = "600";
+            internetBox.appendChild(status);
+
+            if (
+                internetData.status === "RELATED_ARTICLES_FOUND" &&
+                Array.isArray(internetData.articles) &&
+                internetData.articles.length > 0
+            ) {
+
+                const articlesHeading = document.createElement("h4");
+                articlesHeading.textContent = "Related News Articles";
+                internetBox.appendChild(articlesHeading);
+
+                internetData.articles.forEach(article => {
+
+                    const card = document.createElement("div");
+                    card.style.padding = "15px";
+                    card.style.margin = "12px 0";
+                    card.style.border = "1px solid #dce5ef";
+                    card.style.borderRadius = "10px";
+                    card.style.background = "#ffffff";
+
+                    const title = document.createElement("h4");
+                    title.textContent = article.title || "Untitled Article";
+                    card.appendChild(title);
+
+                    const source = document.createElement("p");
+                    source.textContent = "Source: " + (article.source || "Unknown");
+                    card.appendChild(source);
+
+                    const link = document.createElement("a");
+
+                    try {
+                        const articleURL = new URL(article.link);
+
+                        if (articleURL.protocol === "https:") {
+                            link.href = articleURL.href;
+                            link.textContent = "Read Full Article";
+                            link.target = "_blank";
+                            link.rel = "noopener noreferrer";
+                            card.appendChild(link);
+                        }
+                    } catch (error) {
+                        // Skip invalid article links
+                    }
+
+                    internetBox.appendChild(card);
+                });
+
+            } else if (
+                internetData.status === "NO_MATCHING_ARTICLES_FOUND"
+            ) {
+
+                status.textContent =
+                    "No related articles found. This does not prove the news is fake.";
+
+            } else if (
+                internetData.status === "UNAVAILABLE"
+            ) {
+
+                status.textContent =
+                    "Internet search is currently unavailable.";
+
+            }
+
+        } else {
+
+            const message = document.createElement("p");
+            message.textContent = "Internet verification data is unavailable.";
+            internetBox.appendChild(message);
+
+        }
+
     } catch (error) {
         clearInterval(scanningInterval);
         scanningBox.classList.remove("show");
@@ -808,6 +966,13 @@ async function analyzeNews() {
 
 function clearAnalysis() {
     newsText.value = "";
+    const internetBox = document.getElementById(
+    "internetVerificationResult"
+);
+
+if (internetBox) {
+    internetBox.innerHTML = "";
+}
     characterCount.textContent = "0 characters";
 
     resultBox.classList.remove(

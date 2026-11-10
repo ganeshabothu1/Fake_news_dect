@@ -7,7 +7,14 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score, classification_report
+from sklearn.metrics import (
+    accuracy_score,
+    classification_report,
+    confusion_matrix,
+    ConfusionMatrixDisplay,
+    roc_curve,
+    roc_auc_score
+)
 
 
 # ============================================================
@@ -389,6 +396,87 @@ plt.close()
 
 print("Figure 6.1 saved successfully!")
 
+# ============================================================
+# CONFUSION MATRIX
+# ============================================================
+
+print("\nGenerating Confusion Matrix...")
+
+cm = confusion_matrix(y_test, y_pred)
+
+print("\nConfusion Matrix:")
+print(cm)
+
+disp = ConfusionMatrixDisplay(
+    confusion_matrix=cm,
+    display_labels=["Fake News", "True News"]
+)
+
+disp.plot(cmap="Blues", values_format="d")
+
+plt.title("Figure 6.2: Confusion Matrix")
+plt.tight_layout()
+
+plt.savefig(
+    os.path.join(BASE_DIR, "results", "figure_6_2_confusion_matrix.png"),
+    dpi=300,
+    bbox_inches="tight"
+)
+
+plt.show()
+plt.close()
+
+
+# ============================================================
+# ROC CURVE AND AUC
+# ============================================================
+
+print("\nGenerating ROC Curve and AUC...")
+
+y_probability = model.predict_proba(X_test_tfidf)[:, 1]
+
+auc_score = roc_auc_score(y_test, y_probability)
+
+fpr, tpr, thresholds = roc_curve(
+    y_test,
+    y_probability
+)
+
+print(f"\nAUC Score: {auc_score:.4f}")
+
+plt.figure(figsize=(8, 6))
+
+plt.plot(
+    fpr,
+    tpr,
+    label=f"Logistic Regression (AUC = {auc_score:.4f})"
+)
+
+plt.plot(
+    [0, 1],
+    [0, 1],
+    linestyle="--",
+    label="Random Classifier"
+)
+
+plt.xlabel("False Positive Rate")
+plt.ylabel("True Positive Rate")
+plt.title("Figure 6.3: ROC Curve")
+plt.legend()
+plt.grid()
+
+plt.tight_layout()
+
+plt.savefig(
+    os.path.join(BASE_DIR, "results", "figure_6_3_roc_curve.png"),
+    dpi=300,
+    bbox_inches="tight"
+)
+
+plt.show()
+plt.close()
+
+print("\nConfusion Matrix and ROC Curve saved successfully!")
 # ============================================================
 # SAVE MODEL
 # ============================================================

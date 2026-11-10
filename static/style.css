@@ -2392,3 +2392,94 @@ textarea::placeholder {
 .column-item strong {
     overflow-wrap: anywhere;
 }
+
+/* =========================================================
+   MODEL EVALUATION - COMPACT GRAPH DESIGN
+   ========================================================= */
+
+.evaluation-section {
+    padding: 65px 20px;
+    background: #f8fbfe;
+}
+
+.evaluation-section .section-heading {
+    margin-bottom: 25px;
+}
+
+.evaluation-stats {
+    display: flex;
+    justify-content: center;
+    gap: 18px;
+    flex-wrap: wrap;
+    margin: 20px 0 30px;
+}
+
+.evaluation-card {
+    min-width: 170px;
+    padding: 16px 25px;
+    text-align: center;
+    background: #ffffff;
+    border: 1px solid #dfe8f0;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(16, 42, 67, 0.05);
+}
+
+.evaluation-card h3 {
+    color: #627d98;
+    font-size: 13px;
+    margin-bottom: 5px;
+}
+
+.evaluation-card p {
+    color: #1769aa;
+    font-size: 25px;
+    font-weight: 800;
+}
+
+.evaluation-graphs {
+    max-width: 950px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.evaluation-graph-card {
+    min-width: 0;
+    padding: 15px;
+    background: #ffffff;
+    border: 1px solid #dfe8f0;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(16, 42, 67, 0.05);
+    overflow: hidden;
+}
+
+.evaluation-graph-card h3 {
+    color: #102a43;
+    font-size: 14px;
+    text-align: center;
+    margin-bottom: 12px;
+}
+
+.evaluation-graph-card img {
+    display: block;
+    width: 100%;
+    max-height: 230px;
+    object-fit: contain;
+    margin: 0 auto;
+    border-radius: 7px;
+}
+
+@media (max-width: 650px) {
+    .evaluation-graphs {
+        grid-template-columns: 1fr;
+    }
+
+    .evaluation-section {
+        padding: 45px 15px;
+    }
+
+    .evaluation-graph-card img {
+        max-height: 250px;
+    }
+}
