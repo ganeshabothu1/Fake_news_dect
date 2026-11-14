@@ -11,3 +11,6 @@ env/
 
 *.log
 .DS_Store
+# Local Python environment files
+Lib/
+Scripts/
