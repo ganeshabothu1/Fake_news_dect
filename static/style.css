@@ -2483,3 +2483,18 @@ textarea::placeholder {
         max-height: 250px;
     }
 }
+
+/* IMAGE DETECTION VISIBILITY TEST */
+#image-detect {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    min-height: 300px;
+    background: #eef7ff !important;
+    padding: 90px 20px !important;
+}
+
+#image-detect h2 {
+    color: #1769aa !important;
+    font-size: 32px !important;
+}

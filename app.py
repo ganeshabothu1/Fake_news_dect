@@ -5,6 +5,10 @@ import joblib
 import pandas as pd
 import requests
 import joblib
+import numpy as np
+import tensorflow as tf
+from PIL import Image
+from io import BytesIO
 import xml.etree.ElementTree as ET
 
 from flask import Flask, render_template, request, jsonify
@@ -42,6 +46,35 @@ print("Loading trained model...")
 
 model = joblib.load(MODEL_FILE)
 vectorizer = joblib.load(VECTORIZER_FILE)
+
+
+# ============================================================
+# LOAD CNN AND MOBILENETV2 IMAGE MODELS
+# ============================================================
+
+CNN_MODEL_FILE = os.path.join(
+    MODEL_DIR, "cnn_image_model.keras"
+)
+
+MOBILENET_MODEL_FILE = os.path.join(
+    MODEL_DIR, "mobilenetv2_image_model.keras"
+)
+
+if not os.path.exists(CNN_MODEL_FILE):
+    raise FileNotFoundError("CNN image model not found!")
+
+if not os.path.exists(MOBILENET_MODEL_FILE):
+    raise FileNotFoundError("MobileNetV2 image model not found!")
+
+print("Loading CNN model...")
+cnn_model = tf.keras.models.load_model(CNN_MODEL_FILE)
+
+print("Loading MobileNetV2 model...")
+mobilenet_model = tf.keras.models.load_model(
+    MOBILENET_MODEL_FILE
+)
+
+print("All three models loaded successfully!")
 
 print("Model loaded successfully!")
 
@@ -432,6 +465,152 @@ def predict():
 
         }), 500
 
+
+# ============================================================
+# IMAGE PREPROCESSING
+# ============================================================
+
+def prepare_image(image_file, image_size, model_type):
+
+    img = Image.open(image_file).convert("RGB")
+
+    img = img.resize(image_size)
+
+    img_array = np.array(img, dtype=np.float32)
+
+    img_array = np.expand_dims(img_array, axis=0)
+
+    if model_type == "cnn":
+        img_array = img_array / 255.0
+
+    elif model_type == "mobilenet":
+        img_array = tf.keras.applications.mobilenet_v2.preprocess_input(
+            img_array
+        )
+
+    return img_array
+
+
+# ============================================================
+# COMMON IMAGE PREDICTION
+# ============================================================
+
+def predict_image_model(image_file, selected_model, model_type):
+
+    if model_type == "cnn":
+        image_array = prepare_image(
+            image_file, (224, 224), "cnn"
+        )
+    else:
+        image_array = prepare_image(
+            image_file, (160, 160), "mobilenet"
+        )
+
+    probability = float(
+        selected_model.predict(image_array, verbose=0)[0][0]
+    )
+
+    # Class mapping: FAKE = 0, REAL = 1
+
+    if probability >= 0.5:
+        result = "TRUE NEWS"
+        confidence = probability * 100
+    else:
+        result = "FAKE NEWS"
+        confidence = (1 - probability) * 100
+
+    return {
+        "result": result,
+        "confidence": round(confidence, 2),
+        "fake_probability": round((1 - probability) * 100, 2),
+        "true_probability": round(probability * 100, 2)
+    }
+
+
+# ============================================================
+# CNN IMAGE PREDICTION
+# ============================================================
+
+@app.route("/predict_image", methods=["POST"])
+def predict_cnn_image():
+
+    try:
+        if "image" not in request.files:
+            return jsonify({
+                "success": False,
+                "message": "Please upload an image."
+            }), 400
+
+        image_file = request.files["image"]
+
+        if image_file.filename == "":
+            return jsonify({
+                "success": False,
+                "message": "No image selected."
+            }), 400
+
+        result = predict_image_model(
+            image_file,
+            cnn_model,
+            "cnn"
+        )
+
+        return jsonify({
+            "success": True,
+            "model": "CNN",
+            **result
+        })
+
+    except Exception as error:
+        app.logger.exception("CNN image prediction error")
+
+        return jsonify({
+            "success": False,
+            "message": "CNN image prediction failed. Please upload a valid image."
+        }), 500
+
+
+# ============================================================
+# MOBILENETV2 IMAGE PREDICTION
+# ============================================================
+
+@app.route("/predict_mobilenet", methods=["POST"])
+def predict_mobilenet_image():
+
+    try:
+        if "image" not in request.files:
+            return jsonify({
+                "success": False,
+                "message": "Please upload an image."
+            }), 400
+
+        image_file = request.files["image"]
+
+        if image_file.filename == "":
+            return jsonify({
+                "success": False,
+                "message": "No image selected."
+            }), 400
+
+        result = predict_image_model(
+            image_file,
+            mobilenet_model,
+            "mobilenet"
+        )
+
+        return jsonify({
+            "success": True,
+            "model": "MobileNetV2",
+            **result
+        })
+
+    except Exception as error:
+        app.logger.exception("MobileNetV2 image prediction error")
+
+        return jsonify({
+            "success": False,
+            "message": "MobileNetV2 image prediction failed. Please upload a valid image."
+        }), 500
 
 # ============================================================
 # START FLASK SERVER

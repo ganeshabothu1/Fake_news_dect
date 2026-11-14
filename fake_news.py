@@ -477,6 +477,28 @@ plt.show()
 plt.close()
 
 print("\nConfusion Matrix and ROC Curve saved successfully!")
+# SAVE LOGISTIC REGRESSION RESULTS
+
+evaluation_results = pd.DataFrame([{
+    "Model": "Logistic Regression",
+    "Accuracy": accuracy,
+    "Precision": report["weighted avg"]["precision"],
+    "Recall": report["weighted avg"]["recall"],
+    "F1 Score": report["weighted avg"]["f1-score"],
+    "ROC AUC": auc_score
+}])
+
+os.makedirs("results", exist_ok=True)
+
+evaluation_results.to_csv(
+    "results/logistic_regression_results.csv",
+    index=False
+)
+
+print("\nLogistic Regression Results:")
+print(evaluation_results)
+
+print("\nResults CSV saved successfully!")
 # ============================================================
 # SAVE MODEL
 # ============================================================
