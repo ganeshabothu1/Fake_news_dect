@@ -6,3 +6,4 @@ flask-cors
 gunicorn
 requests
 joblib
+tensorflow-cpu==2.21.0
