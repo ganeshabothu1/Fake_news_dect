@@ -2498,3 +2498,78 @@ textarea::placeholder {
     color: #1769aa !important;
     font-size: 32px !important;
 }
+
+
+/* MODEL COMPARISON SECTION */
+
+.model-comparison-section {
+    padding: 75px 20px;
+    background: #f5f9ff;
+}
+
+.comparison-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 22px;
+    margin-top: 35px;
+}
+
+.comparison-card {
+    background: #ffffff;
+    padding: 28px 22px;
+    border: 1px solid #dce6f3;
+    border-radius: 15px;
+    text-align: center;
+    box-shadow: 0 5px 18px rgba(0,0,0,0.05);
+}
+
+.comparison-card h3 {
+    color: #172b4d;
+    font-size: 19px;
+}
+
+.comparison-value {
+    font-size: 34px;
+    font-weight: 800;
+    color: #1670bd;
+    margin: 18px 0;
+}
+
+.comparison-bar {
+    height: 11px;
+    background: #e5edf7;
+    border-radius: 20px;
+    overflow: hidden;
+    margin: 20px 0;
+}
+
+.comparison-bar div {
+    height: 100%;
+    background: linear-gradient(90deg, #2685d5, #42b5e8);
+    border-radius: 20px;
+}
+
+.comparison-card p {
+    color: #53657b;
+    font-size: 14px;
+}
+
+.comparison-card span {
+    color: #1670bd;
+    font-weight: 600;
+}
+
+.comparison-note {
+    background: white;
+    border: 1px solid #dce6f3;
+    border-radius: 15px;
+    padding: 25px;
+    margin-top: 30px;
+    line-height: 1.7;
+}
+
+@media (max-width: 768px) {
+    .comparison-grid {
+        grid-template-columns: 1fr;
+    }
+}

@@ -1076,6 +1076,69 @@ button:active, .nav-button:active { transform: translateY(0) scale(.98); }
 
 <section id="dataset" class="section dataset-section">
 
+
+<!-- MODEL COMPARISON SECTION -->
+<section id="model-comparison" class="model-comparison-section">
+    <div class="container">
+
+        <div class="section-header">
+            <span class="section-tag">MODEL ANALYSIS</span>
+            <h2>Model Comparison</h2>
+            <p>Performance comparison of the three implemented models.</p>
+        </div>
+
+        <div class="comparison-grid">
+
+            <div class="comparison-card">
+                <h3>Logistic Regression</h3>
+                <div class="comparison-value">98.65%</div>
+                <div class="comparison-bar">
+                    <div style="width:98.65%"></div>
+                </div>
+                <p>Text-Based Machine Learning</p>
+                <span>AUC: 0.9985</span>
+            </div>
+
+            <div class="comparison-card">
+                <h3>CNN</h3>
+                <div class="comparison-value">80%</div>
+                <div class="comparison-bar">
+                    <div style="width:80%"></div>
+                </div>
+                <p>Image-Based Deep Learning</p>
+                <span>AUC: 0.8975</span>
+            </div>
+
+            <div class="comparison-card">
+                <h3>MobileNetV2</h3>
+                <div class="comparison-value">85%</div>
+                <div class="comparison-bar">
+                    <div style="width:85%"></div>
+                </div>
+                <p>Lightweight Image-Based Deep Learning</p>
+                <span>AUC: 0.8825</span>
+            </div>
+
+        </div>
+
+        <div class="comparison-note">
+            <h3>Performance Analysis</h3>
+            <p>
+                Logistic Regression achieved 98.65% accuracy on the
+                text-based evaluation dataset. MobileNetV2 achieved
+                85% accuracy and CNN achieved 80% accuracy on the
+                image-based evaluation dataset.
+            </p>
+            <p>
+                These models use different input modalities and
+                evaluation datasets. Their accuracy values should
+                not be treated as a direct like-for-like comparison.
+            </p>
+        </div>
+
+    </div>
+</section>
+
     <div class="dataset-container">
 
 
